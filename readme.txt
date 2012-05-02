@@ -17,3 +17,4 @@ See the COPYING file in your DokuWiki folder for details
 HISTORY:
 
 * v0.1
+- directory parsing working
