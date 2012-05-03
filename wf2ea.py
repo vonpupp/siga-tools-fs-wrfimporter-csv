@@ -78,21 +78,35 @@ def parsedir(path):
         for filename in filenames:
             if filename.endswith(('.png')):
                 wffile = os.path.join(dirname, filename)
-                lis.append([filename, 'Artifact', '<a href="' + wffile + '"><font color="#0000ff"><u>' + wffile + '</u></font></a>', 'File', 'Albert De La Fuente', wffile])
-                print "         f:%s" % (wffile)
+                lis.append([filename, 'Artifact', '<a href="' + wffile + '"><font color="#0000ff"><u>' + wffile + '</u></font></a>', 'File', 'Albert De La Fuente', filename, wffile])
+                #print "         f:%s" % (wffile)
                 pass
             #print "%s %s %s" % (os.path.join(dirname, filename), " ext: ", filename.lower())
     #log.info("mainwf2ea(path=%r, outfile=%r)",
              #path, outfile)
     return lis
 
+def fixpath(path, prefix):
+    pass
+
+def fixpaths(lis, prefix):
+    for csvname, csvtype, csvnotes, csvstereotype, csvauthor, csvalias, csvgenfile in lis:
+        fixpath(csvnotes)
+        fixpath(csvgenfile)
+    pass
+
+def writecvs(wr, lis):
+    wr.writerow(["Name", "Type", "Notes", "Stereotype", "Author", "Alias", "GenFile"])
+    for row in lis:
+        wr.writerow(row)
+
 def mainwf2ea(path, outfile):
     #Name, Type, Notes, Stereotype, Author, Alias, GenFile
     # lavrar_ata_trimestral_cadastro.png, Artifact, <a href="path"><font color="#0000ff"><u>file.png</u></font></a>, File, Albert De La Fuente,	path.png
     fh = open('eggs.csv', 'wb')
-    wr = csv.writer(fh, delimiter='\t', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    wr = csv.writer(fh, delimiter='\t')#, quotechar='"')#, quoting=csv.QUOTE_MINIMAL)
     lis = parsedir(path)
-    wr.writerow(lis)
+    writecvs(wr, lis)
     print lis
 
 #---- mainline

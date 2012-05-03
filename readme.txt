@@ -16,5 +16,14 @@ See the COPYING file in your DokuWiki folder for details
 
 HISTORY:
 
+* v0.2
+- first working version
+- TODO:
+	- Clean the code
+	- Fix the file field (not appearing on EA)
+	- Add more parameters
+	- Fix paths as option and parameter
+	- Learn how to use the logger and verbosity levels
+
 * v0.1
 - directory parsing working
