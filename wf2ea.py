@@ -61,10 +61,25 @@ import csv
 
 #---- global data
 
-#log = logging.getLogger("wf2ea")
-
+#log = logging.getLogger("wf2ea-log")
+logger = logging.getLogger('wf2ea')
 
 #---- internal support stuff
+
+def fixpath(path, old, new):
+    path = path.replace(old, new)
+    path = path.replace("/", "\\")
+    print "fixed path: " + path + "\n"
+    return path
+    pass
+
+def fixpaths(lis, prefix):
+    for csvname, csvtype, csvnotes, csvstereotype, csvauthor, csvalias, csvgenfile in lis:
+        csvnotes = fixpath(csvnotes, prefix)
+        print "fixedpaths: " + csvgenfile + "\n"
+        csvgenfile = fixpath(csvgenfile, prefix)
+        print "fixedpaths: " + csvgenfile + "\n"
+    pass
 
 def parsedir(path):
     lis = [];
@@ -78,27 +93,21 @@ def parsedir(path):
         for filename in filenames:
             if filename.endswith(('.png')):
                 wffile = os.path.join(dirname, filename)
+                wffile = fixpath(wffile, "/home/afu/siga/siga-svn/", "C:\\SIGA\\")
+                logger.debug("parsedir().filename=%s", filename)
                 lis.append([filename, 'Artifact', '<a href="' + wffile + '"><font color="#0000ff"><u>' + wffile + '</u></font></a>', 'File', 'Albert De La Fuente', filename, wffile])
                 #print "         f:%s" % (wffile)
                 pass
             #print "%s %s %s" % (os.path.join(dirname, filename), " ext: ", filename.lower())
-    #log.info("mainwf2ea(path=%r, outfile=%r)",
-             #path, outfile)
+            #log.info("mainwf2ea(path=%r, outfile=%r)",
+            #path, outfile)
     return lis
 
-def fixpath(path, prefix):
-    pass
-
-def fixpaths(lis, prefix):
-    for csvname, csvtype, csvnotes, csvstereotype, csvauthor, csvalias, csvgenfile in lis:
-        fixpath(csvnotes)
-        fixpath(csvgenfile)
-    pass
-
-def writecvs(wr, lis):
-    wr.writerow(["Name", "Type", "Notes", "Stereotype", "Author", "Alias", "GenFile"])
-    for row in lis:
-        wr.writerow(row)
+def writecvs(w, l):
+    w.writerow(["Name", "Type", "Notes", "Stereotype", "Author", "Alias", "GenFile"])
+    for row in l:
+        #print "writecvs: " + row[6] + "\n"
+        w.writerow(row)
 
 def mainwf2ea(path, outfile):
     #Name, Type, Notes, Stereotype, Author, Alias, GenFile
@@ -106,8 +115,9 @@ def mainwf2ea(path, outfile):
     fh = open('eggs.csv', 'wb')
     wr = csv.writer(fh, delimiter='\t')#, quotechar='"')#, quoting=csv.QUOTE_MINIMAL)
     lis = parsedir(path)
+    #fixpaths(lis, "C:\\doc\\")
     writecvs(wr, lis)
-    print lis
+    #print lis
 
 #---- mainline
 
@@ -124,11 +134,20 @@ def main(argv):
         if opt in ('-h', '--help'):
             sys.stdout.write(__doc__)
             return 0
-        elif opt in ('-v', '--verbose'):
-            pass
+        elif opt in ('-v', '-vv', '-vvv', '-vvvv', '--verbose'):
             #log = logging.getLogger("sample")
             #log.setLevel(logging.DEBUG)
             #log.basi logging.basicConfig(filename='cvs.log',level=logging.DEBUG)
+            hdlr = logging.FileHandler('/home/afu/Dropbox/mnt-ccb/siga/siga-tools/siga-tools-wf2ea/myapp.log')
+            formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+            hdlr.setFormatter(formatter)
+            logger.addHandler(hdlr)
+            if opt == '-v':
+                logger.setLevel(logging.INFO)
+            elif opt == '-vv':
+                logger.setLevel(logging.DEBUG)
+            logger.info("Starting to log...")
+            pass
         elif opt == '-o':
             outfile = optarg
         #elif opt == '-D':
