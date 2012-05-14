@@ -1,7 +1,7 @@
 Script for parsing a structure looking for image files and create a cvs that EA can import
 
 ----
-Copyright (C) Albert De La Fuente <vonpupp@gmail.com>
+Copyright (C) Albert De La Fuente <http://www.google.com/recaptcha/mailhide/d?k=01w-AN5Lq7Y3PxXFPUMAurig==&c=5RdpY03cYkLHKGAfUQ_0RBQWTiOfBrBreDLUqwD6Dr4=>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
