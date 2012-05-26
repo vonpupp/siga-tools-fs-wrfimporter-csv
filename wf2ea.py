@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 #   Project:			SIGA-CCB
@@ -5,25 +6,23 @@
 #   Language:			bash
 #
 #   License: 			GNU Public License
-#       This file is part of req2ea.
+#       This file is part of the project.
 #	This is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
 #	the Free Software Foundation, either version 3 of the License, or
 #	(at your option) any later version.
 #
-#	Foobar is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
-#
-#	You should have received a copy of the GNU General Public License
-#	along with Foobar.  If not, see <http://www.gnu.org/licenses/>. 
+#	Distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+#       without even the implied warranty of MERCHANTABILITY or
+#       FITNESS FOR A PARTICULAR PURPOSE.
+#       See the GNU General Public License for more details.
+#       <http://www.gnu.org/licenses/>
 #
 #   Author:			Albert De La Fuente (www.albertdelafuente.com)
 #   E-Mail:			http://www.google.com/recaptcha/mailhide/d?k=01w-AN5Lq7Y3PxXFPUMAurig==&c=5RdpY03cYkLHKGAfUQ_0RBQWTiOfBrBreDLUqwD6Dr4=
 #
 #   Description:		This script will parse a full hierarchy from a path
-#        and build a cvs representing the wireframes from the project
+#        and build a csv representing the wireframes from the project
 #
 #   Limitations:		Error handling is not implemented, time constraints
 #	The code is not clean and elegant as it should, again, time constraints
@@ -34,7 +33,7 @@
 #   Compiler Options:		
 
 """
-    Create a CVS with the wireframe data based on a hierarchy.
+    Create a CSV file with the wireframe data based on a hierarchy.
 
     Command Line Usage:
         wf2ea {<option> <argument>}
@@ -50,8 +49,12 @@
         -l, --log <logfile>                 log to file.
         
     Examples:
-        wf2ea -p ./wf -o ./out.csv          Will parse ./wf and produce the out.csv file
-        wf2ea -p ./wf -o ./out.csv -v 3     Same as above with level 3 verbosity
+        wf2ea.py -p ./wf -o ./out.csv          Will parse ./wf and produce the out.csv file
+        wf2ea.py -p ./wf -o ./out.csv -v 3     Same as above with level 3 __verbosity
+        wf2ea.py -p ~/siga/siga-svn/DesenvolvimentoSiga/PROJETO_SIGA/3.TEP\ -\ Consolidado/ \\
+                 -r /home/afu/siga/siga-svn/ \\
+                 -f C:\\SIGA\\DesenvolvimentoSiga\\PROJETO_SIGA\\3.TEP - Consolidado\\3. Wireframes\\ \\
+                 -o ./out.csv -v 2
 """
 
 import getopt
@@ -64,92 +67,78 @@ import csv
 
 #---- global data
 
-DBGLVL = 2
+VERB_NON = 0
+VERB_MIN = 1
+VERB_MED = 2
+VERB_MAX = 3
 
 class WF():
-    """Class"""
-
-    #log = logging.getLogger("wf2ea-log")
-    
-    #verbosity = None
-    #logger = None
+    """ Main problem class
+    Attributes:
+        - path, prependpath, replacepath, outfile: string
+    """
     
     def __init__(self):
         # TODO: Private / protected
-        self.verbosity = 1
-        self.logger = logging.getLogger('wf2ea')
-        self.loghdlr = None
-        self.formatter = None
-        self.wflist = []
-        self.wfcount = 0
+        self.__verbosity = 0
+        self.__logger = logging.getLogger('wf2ea')
+        self.__loghdlr = None
+        self.__formatter = None
+        self.__wflist = []
+        self.__wfcount = 0
         self.csvhdlr = None
-        # Input
+        # Public
         self.path = ""
         self.prependpath = ""
         self.replacepath = ""
-        self.outfile = sys.stdout
+        self.outfile = "" # sys.stdout
         pass
     
     #---- internal support stuff
     
     def logv(self, v, str):
         #print "logv().v=%d" % v
-        #print "main().verbosity=%d" % verbosity
-        if self.verbosity == v:
+        #print "main().__verbosity=%d" % __verbosity
+        if self.__verbosity == v:
             print str
-            
-    def isVerbose(self):
-        return self.verbosity > 1
-    
-    def setVerbosity(self, verb):
-        self.verbosity = verb
-        
-    def setLogger(self, str):
-        self.loghdlr = logging.FileHandler(str)
-        self.formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-        self.loghdlr.setFormatter(self.formatter)
-        self.logger.addHandler(self.loghdlr)
-        #print "verbosity=%d" % verbosity
-        #print "optarg=%s" % optarg
-        if self.verbosity == 2:
-            self.logger.setLevel(logging.INFO)
-            self.logger.info("Starting to log (INFO)...")
-        elif self.verbosity == 3:
-            self.logger.setLevel(logging.DEBUG)
-            self.logger.info("Starting to log (DEBUG)...")
 
+    def isVerbose(self):
+        return self.__verbosity > 1
     
+    def setLogger(self, str):
+        self.__loghdlr = logging.FileHandler(str)
+        self.__formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        self.__loghdlr.setFormatter(self.__formatter)
+        self.__logger.addHandler(self.__loghdlr)
+        if self.__verbosity == 2:
+            self.__logger.setLevel(logging.INFO)
+            self.__logger.info("Starting to log (INFO)...")
+        elif self.__verbosity == 3:
+            self.__logger.setLevel(logging.DEBUG)
+            self.__logger.info("Starting to log (DEBUG)...")
+
     def fixpath(self, path, old, new):
         path = path.replace(old, new)
         path = path.replace("/", "\\")
-        self.logv(DBGLVL, "fixpath().path=" + path + "\n")
+        #self.logv(VERB_MIN, "fixpath().path=" + path + "\n")
         return path
         pass
-    
-    def fixpaths(self, prefix):
-        for csvname, csvtype, csvnotes, csvstereotype, csvauthor, csvalias, csvgenfile in lis:
-            csvnotes = fixpath(csvnotes, prefix)
-            print "fixedpaths: " + csvgenfile + "\n"
-            csvgenfile = self.fixpath(csvgenfile, prefix)
-            print "fixedpaths: " + csvgenfile + "\n"
-        pass
-    
+   
     def parseDir(self):
-        self.logv(DBGLVL, "-> parsedir()")
-        self.wflist = []
-        self.wfcount = 0
+        self.logv(VERB_MIN, "-> parsedir()")
+        self.__wflist = []
+        self.__wfcount = 0
+        #if self.path == ""
         for dirname, dirnames, filenames in os.walk(self.path):
             if '.svn' in dirnames:
                 dirnames.remove('.svn')
-            #print " d:%s" % (dirname)
             for subdirname in dirnames:
-                #print "     sd:%s" % (os.path.join(dirname, subdirname))
                 pass
             for filename in filenames:
                 if filename.endswith(('.png')):
-                    self.wfcount += 1
+                    self.__wfcount += 1
                     wffile = os.path.join(dirname, filename)
-                    self.logv(DBGLVL, "parsedir().wffile=%s" % (wffile))
+                    #self.logv(VERB_MIN, "parsedir().wffile=%s" % (wffile))
                     
                     wffile = self.fixpath(wffile, "/home/afu/siga/siga-svn/", "C:\\SIGA\\")
                     
@@ -157,56 +146,40 @@ class WF():
                         '<a href="' + wffile + '"><font color="#0000ff"><u>' + wffile + '</u></font></a>',
                         'File', 'Albert De La Fuente', filename, wffile]
                     
-                    self.logv(2, "parsedir().wftuple=" + str(wftuple))
+                    #self.logv(2, "parsedir().wftuple=" + str(wftuple))
                     #self.logv(2, "parsedir().wftuple=%s" .join(map(str, wftuple)))
-                    self.wflist.append(wftuple)
+                    self.__wflist.append(wftuple)
                     pass
-        self.logv(DBGLVL, "parsedir().result=%d" % self.wfcount)
-        self.logv(DBGLVL, "-> parsedir()")
-        return self.wfcount
+        self.logv(VERB_MIN, "parsedir().result=%d" % self.__wfcount)
+        self.logv(VERB_MIN, "-> parsedir()")
+        return self.__wfcount
 
     def writecsv(self):
-        #self.csvhdlr.
-        if self.outfile != sys.stdout:
+        if self.outfile != "":
             fh = open(self.outfile, 'wb')
+            #fh = codecs.open(self.outfile, 'wb', encoding="utf-8")
         else:
             fh = sys.stdout
+
         csvhdlr = csv.writer(fh, delimiter='\t')#, quotechar='"')#, quoting=csv.QUOTE_MINIMAL)
         csvhdlr.writerow(["Name", "Type", "Notes", "Stereotype", "Author", "Alias", "GenFile"])
-        for row in self.wflist:
-            #print "writecvs: " + row[6] + "\n"
+        for row in self.__wflist:
             csvhdlr.writerow(row)
- 
-    def writecsvh(self, csvhdlr):
-        #self.csvhdlr.
-        csvhdlr.writerow(["Name", "Type", "Notes", "Stereotype", "Author", "Alias", "GenFile"])
-        #csv.DictWriter(self.csvhdlr).writerow(["Name", "Type", "Notes", "Stereotype", "Author", "Alias", "GenFile"])
-        for row in self.wflist:
-            #print "writecvs: " + row[6] + "\n"
-            csvhdlr.writerow(row)
-    
-    def processWF(self, path): #, outfile):
-        #Name, Type, Notes, Stereotype, Author, Alias, GenFile
-        # lavrar_ata_trimestral_cadastro.png, Artifact, <a href="path"><font color="#0000ff"><u>file.png</u></font></a>, File, Albert De La Fuente,	path.png
-        fh = open('eggs.csv', 'wb')
-        csvhdlr = csv.writer(fh, delimiter='\t')#, quotechar='"')#, quoting=csv.QUOTE_MINIMAL)
-        self.parsedir(path)
-        #print "number of wf = %d" % wfcount
-        #fixpaths(lis, "C:\\doc\\")
-        self.writecsvh(csvhdlr)
-        #print lis
+            #self.logv(2, "writecsv().row = " + str(row))
+        #self.logv(2, "writecsv().outfile = " + self.outfile)
     
     #---- mainline
 
 def main(argv):
     wfl = WF()
     try:
-        optlist, args = getopt.getopt(argv[1:], 'hp:r:f:o:v:l:', ['help', 'verbose', 'log', 'out', 'path'])
+        optlist, args = getopt.getopt(argv[1:], 'hp:r:f:o:v:l:', ['help', 'path', 'replace', 'fix', 'out', 'verbose', 'log'])
     except getopt.GetoptError, msg:
         sys.stderr.write("wf2ea: error: %s" % msg)
         sys.stderr.write("See 'wf2ea --help'.\n")
         return 1
-    #wfl.outfile = sys.stdout
+
+    print str(optlist)
     for opt, optarg in optlist:
         if opt in ('-h', '--help'):
             sys.stdout.write(__doc__)
@@ -222,26 +195,27 @@ def main(argv):
             pass
         elif opt in ('-o', '--out'):
             wfl.outfile = optarg
+            print "(-o) OUTPUT:  " + optarg
             pass
         elif opt in ('-v', '--verbose'):
             #hdlr = logging.FileHandler('/home/afu/Dropbox/mnt-ccb/siga/siga-tools/siga-tools-wf2ea/myapp.log')
-            #formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-            #hdlr.setFormatter(formatter)
-            #logger.addHandler(hdlr)
-            wfl.verbosity = int(optarg)
+            #__formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+            #hdlr.setFormatter(__formatter)
+            #__logger.addHandler(hdlr)
+            wfl.__verbosity = int(optarg)
             wfl.logv(2, "main.optarg[%d]" % len(optlist))
             wfl.logv(2, "main.optarg = " .join(map(str, optarg)))
             wfl.logv(2, "main.optlist = " .join(map(str, optlist)))
-            #print "verbosity=%d" % verbosity
-            #wfl.verbosity = int(optarg)
-            #print "verbosity=%d" % verbosity
+            #print "__verbosity=%d" % __verbosity
+            #wfl.__verbosity = int(optarg)
+            #print "__verbosity=%d" % __verbosity
             #print "optarg=%s" % optarg
-            #if verbosity == 2:
-            #    logger.setLevel(logging.INFO)
-            #    logger.info("Starting to log (INFO)...")
-            #elif verbosity == 3:
-            #    logger.setLevel(logging.DEBUG)
-            #    logger.info("Starting to log (DEBUG)...")
+            #if __verbosity == 2:
+            #    __logger.setLevel(logging.INFO)
+            #    __logger.info("Starting to log (INFO)...")
+            #elif __verbosity == 3:
+            #    __logger.setLevel(logging.DEBUG)
+            #    __logger.info("Starting to log (DEBUG)...")
             pass
         elif opt in ('-l', '--log'):
             wfl.logfile = optarg            
@@ -251,15 +225,14 @@ def main(argv):
                 wfl.setLogger('/home/afu/Dropbox/mnt-ccb/siga/siga-tools/siga-tools-wf2ea/myapp.log')
             pass
 
-    print len(args)
-    print "path=" + wfl.path
-    wfl.replacepath = "/home/afu/siga/siga-svn/"
-    wfl.prependpath = "C:\\SIGA\\"
-    #wfl.logv(1, "main.wfl.optarg = " .join(map(str, args)))
     wfl.parseDir()
-    print "after parsedir"
-    #wfl.logv(1, "main.wfl.optarg = " .join(map(str, wfl.wflist)))
+    #wfl.logv(VERB_NON, "main.optarg = " .join(map(str, optarg)))
+    #wfl.logv(1, "main.wfl.optarg = " .join(map(str, wfl.__wflist)))
     wfl.writecsv()
+    print "INPUT:   " + wfl.path
+    print "OUTPUT:  " + wfl.outfile
+    print " * Replace:  " + wfl.replacepath
+    print " * Fix with: " + wfl.prependpath
 
     #if len(args) == 0:
     #    sys.stderr.write("wf2ea: error: incorrect number of "\
@@ -275,7 +248,7 @@ def main(argv):
         #wfl.processDir(path) #, outfile) #, defines)
         #print "path=" + path
         #wfl.parseDir(path)
-        #wfl.logv(2, "main.wfl.optarg = " .join(map(str, wfl.wflist)))
+        #wfl.logv(2, "main.wfl.optarg = " .join(map(str, wfl.__wflist)))
         #wfl.fixpaths()
         #wfl.writecsv()
         
