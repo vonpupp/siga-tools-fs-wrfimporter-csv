@@ -62,6 +62,7 @@ import logging
 import sys
 import os
 import csv
+import codecs
 
 #---- exceptions
 
@@ -80,7 +81,7 @@ class WF():
     
     def __init__(self):
         # TODO: Private / protected
-        self.__verbosity = 0
+        self.__verbosity = VERB_NON
         self.__logger = logging.getLogger('wf2ea')
         self.__loghdlr = None
         self.__formatter = None
@@ -98,9 +99,12 @@ class WF():
     
     def logv(self, v, str):
         #print "logv().v=%d" % v
-        #print "main().__verbosity=%d" % __verbosity
-        if self.__verbosity == v:
+        #print "main().__verbosity=%d" % self.__verbosity
+        if self.__verbosity >= v:
             print str
+            
+    def setVerbosity(self, v):
+        self.__verbosity = v
 
     def isVerbose(self):
         return self.__verbosity > 1
@@ -118,14 +122,18 @@ class WF():
             self.__logger.info("Starting to log (DEBUG)...")
 
     def fixpath(self, path, old, new):
+        self.logv(VERB_MED, "fixpath().path = %s" % path)
+        self.logv(VERB_MED, "fixpath().old = %s" % old)
+        self.logv(VERB_MED, "fixpath().new = %s" % new)
         path = path.replace(old, new)
+        self.logv(VERB_MED, "fixpath().path (replaced1) = %s" % path)
         path = path.replace("/", "\\")
-        #self.logv(VERB_MIN, "fixpath().path=" + path + "\n")
+        self.logv(VERB_MED, "fixpath().path (replaced2) = %s" % path)
         return path
         pass
    
     def parseDir(self):
-        self.logv(VERB_MIN, "-> parsedir()")
+        self.logv(VERB_MED, "-> parsedir()")
         self.__wflist = []
         self.__wfcount = 0
         #if self.path == ""
@@ -138,9 +146,9 @@ class WF():
                 if filename.endswith(('.png')):
                     self.__wfcount += 1
                     wffile = os.path.join(dirname, filename)
-                    #self.logv(VERB_MIN, "parsedir().wffile=%s" % (wffile))
+                    self.logv(VERB_MIN, "parsedir() => Parsing... %s" % (wffile))
                     
-                    wffile = self.fixpath(wffile, "/home/afu/siga/siga-svn/", "C:\\SIGA\\")
+                    wffile = self.fixpath(wffile, self.replacepath, self.prependpath)
                     
                     wftuple = [filename, 'Artifact',
                         '<a href="' + wffile + '"><font color="#0000ff"><u>' + wffile + '</u></font></a>',
@@ -151,12 +159,14 @@ class WF():
                     self.__wflist.append(wftuple)
                     pass
         self.logv(VERB_MIN, "parsedir().result=%d" % self.__wfcount)
-        self.logv(VERB_MIN, "-> parsedir()")
+        self.logv(VERB_MED, "-> parsedir()")
         return self.__wfcount
 
     def writecsv(self):
         if self.outfile != "":
             fh = open(self.outfile, 'wb')
+            #fh = codecs.open(self.outfile, "wb", "utf-8")
+
             #fh = codecs.open(self.outfile, 'wb', encoding="utf-8")
         else:
             fh = sys.stdout
@@ -164,6 +174,7 @@ class WF():
         csvhdlr = csv.writer(fh, delimiter='\t')#, quotechar='"')#, quoting=csv.QUOTE_MINIMAL)
         csvhdlr.writerow(["Name", "Type", "Notes", "Stereotype", "Author", "Alias", "GenFile"])
         for row in self.__wflist:
+            #csvhdlr.writerow(dict((vname, vtype, vnotes, vstereotype, vauthor, valias, vgenfile.encode('utf-8')) for vname, vtype, vnotes, vstereotype, vauthor, valias, vgenfile in row.iteritems()))
             csvhdlr.writerow(row)
             #self.logv(2, "writecsv().row = " + str(row))
         #self.logv(2, "writecsv().outfile = " + self.outfile)
@@ -195,17 +206,19 @@ def main(argv):
             pass
         elif opt in ('-o', '--out'):
             wfl.outfile = optarg
-            print "(-o) OUTPUT:  " + optarg
+            wfl.logv(VERB_MED, "(-o) OUTPUT: %s" % optarg)
             pass
         elif opt in ('-v', '--verbose'):
             #hdlr = logging.FileHandler('/home/afu/Dropbox/mnt-ccb/siga/siga-tools/siga-tools-wf2ea/myapp.log')
             #__formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
             #hdlr.setFormatter(__formatter)
             #__logger.addHandler(hdlr)
-            wfl.__verbosity = int(optarg)
-            wfl.logv(2, "main.optarg[%d]" % len(optlist))
-            wfl.logv(2, "main.optarg = " .join(map(str, optarg)))
-            wfl.logv(2, "main.optlist = " .join(map(str, optlist)))
+            wfl.setVerbosity(int(optarg))
+            #wfl.__verbosity = int(optarg)
+#            print "(-v): " + str(wfl.__verbosity)
+            wfl.logv(VERB_MED, "main.optarg[%d]" % len(optlist))
+            wfl.logv(VERB_MED, "main.optarg = " .join(map(str, optarg)))
+            wfl.logv(VERB_MED, "main.optlist = " .join(map(str, optlist)))
             #print "__verbosity=%d" % __verbosity
             #wfl.__verbosity = int(optarg)
             #print "__verbosity=%d" % __verbosity
@@ -219,7 +232,7 @@ def main(argv):
             pass
         elif opt in ('-l', '--log'):
             wfl.logfile = optarg            
-            wfl.logv(2, "main.optarg = " .join(map(str, optarg)))
+            wfl.logv(VERB_MED, "main.optarg = " .join(map(str, optarg)))
             if wfl.isVerbose:
                 #wfl.logv(2, "main.optarg = " + optarg)
                 wfl.setLogger('/home/afu/Dropbox/mnt-ccb/siga/siga-tools/siga-tools-wf2ea/myapp.log')
@@ -233,6 +246,7 @@ def main(argv):
     print "OUTPUT:  " + wfl.outfile
     print " * Replace:  " + wfl.replacepath
     print " * Fix with: " + wfl.prependpath
+#    print "wfl.verbosity=" + str(wfl.__verbosity)
 
     #if len(args) == 0:
     #    sys.stderr.write("wf2ea: error: incorrect number of "\
