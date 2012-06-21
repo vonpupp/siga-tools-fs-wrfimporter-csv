@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
-#   Project:			SIGA-CCB
+#   Project:			SIGA
 #   Component Name:		wf2ea
-#   Language:			bash
+#   Language:			Python
 #
 #   License: 			GNU Public License
 #       This file is part of the project.
@@ -19,12 +19,12 @@
 #       <http://www.gnu.org/licenses/>
 #
 #   Author:			Albert De La Fuente (www.albertdelafuente.com)
-#   E-Mail:			http://www.google.com/recaptcha/mailhide/d?k=01w-AN5Lq7Y3PxXFPUMAurig==&c=5RdpY03cYkLHKGAfUQ_0RBQWTiOfBrBreDLUqwD6Dr4=
+#   E-Mail:			http://www.google.com/recaptcha/mailhide/d?k=01eb_9W_IYJ4Pm_Y9ALRIPug==&c=L15IEH_kstH8WRWfqnRyeW4IDQuZPzNDRB0KCzMTbHQ=
 #
 #   Description:		This script will parse a full hierarchy from a path
 #        and build a csv representing the wireframes from the project
 #
-#   Limitations:		Error handling is not implemented, time constraints
+#   Limitations:		Error handling is correctly implemented, time constraints
 #	The code is not clean and elegant as it should, again, time constraints
 #   Database tables used:	None 
 #   Thread Safe:	        No
@@ -52,7 +52,7 @@
         wf2ea.py -p ./wf -o ./out.csv          Will parse ./wf and produce the out.csv file
         wf2ea.py -p ./wf -o ./out.csv -v 3     Same as above with level 3 __verbosity
         wf2ea.py -p ~/siga/siga-svn/DesenvolvimentoSiga/PROJETO_SIGA/3.TEP\ -\ Consolidado/ \\
-                 -r /home/afu/siga/siga-svn/ \\
+                 -r ~/siga/siga-svn/ \\
                  -f C:\\SIGA\\DesenvolvimentoSiga\\PROJETO_SIGA\\3.TEP - Consolidado\\3. Wireframes\\ \\
                  -o ./out.csv -v 2
 """
